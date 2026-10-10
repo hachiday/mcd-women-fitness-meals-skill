@@ -37,6 +37,4 @@ Thumbs.db
 .lhl-work-output/
 .probe/
 out/
-# ---- WorkBuddy 工作区记忆（本地数据，不进参赛仓库）----
-.workbuddy/
 .tmp/
