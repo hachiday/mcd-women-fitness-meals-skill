@@ -183,6 +183,26 @@ def render_card(plan: Plan, top_items: list[Item] | None = None) -> str:
 
     day_label = "训练日配餐建议" if plan.profile.training_day else "休息日配餐建议"
 
+    # 首屏标题：明确对比口径，避免与"全表极差"混淆
+    if plan.baseline and plan.baseline_ratio >= 1.5:
+        headline_line1 = f"{plan.baseline.protein} 克蛋白"
+        headline_line2 = f"本方案少摄入 {plan.baseline_saved} mg 钠"
+    elif plan.counterpart:
+        base_eff = eff
+        c_eff = plan.counterpart.sodium_efficiency() or 0
+        headline_line1 = f"{plan.main.protein} 克蛋白"
+        headline_line2 = f"钠效率可以差 {base_eff / c_eff:.1f} 倍" if c_eff else "钠效率可以大幅优化"
+    else:
+        headline_line1 = f"{plan.totals['protein']} 克蛋白"
+        headline_line2 = "按钠效率优选"
+
+    headline_sub = (
+        "同为"
+        f"{plan.baseline.protein} g 蛋白的两份搭配，钠效率相差 {plan.baseline_ratio:.1f} 倍"
+        if plan.baseline and plan.baseline_ratio >= 1.5
+        else "依据钠效率 = 钠(mg) ÷ 蛋白(g) 优选"
+    )
+
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -206,8 +226,9 @@ def render_card(plan: Plan, top_items: list[Item] | None = None) -> str:
     font-size: 12px; letter-spacing: .18em; opacity: .9;
     text-transform: uppercase; margin-bottom: 6px;
   }}
-  .head h1 {{ font-size: 26px; font-weight: 700; line-height: 1.25; }}
-  .head .sub {{ font-size: 13px; opacity: .92; margin-top: 8px; }}
+  .head h1 {{ font-size: 25px; font-weight: 700; line-height: 1.3; }}
+  .head .sub {{ font-size: 13px; opacity: .94; margin-top: 8px; }}
+  .head .sub2 {{ font-size: 12px; opacity: .80; margin-top: 4px; }}
   .badge {{
     display: inline-block; margin-top: 12px; padding: 5px 12px;
     background: {MCD_YELLOW}; color: {INK};
@@ -290,8 +311,9 @@ def render_card(plan: Plan, top_items: list[Item] | None = None) -> str:
 <div class="sheet">
   <div class="head">
     <div class="eyebrow">McDonald'&#39;s China MCP · Nutrition Skill</div>
-    <h1>同样吃 {_e(headline_word)}，<br>钠可以差 {headline_ratio:.1f} 倍</h1>
-    <div class="sub">面向力量训练 / 增肌期女性的麦当劳配餐建议</div>
+    <h1>同样吃{_e(headline_line1)}，<br>{_e(headline_line2)}</h1>
+    <div class="sub">{_e(headline_sub)}</div>
+    <div class="sub2">面向力量训练 / 增肌期女性的麦当劳配餐建议</div>
     <div class="badge">{day_label}</div>
   </div>
 
